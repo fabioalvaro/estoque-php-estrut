@@ -74,7 +74,7 @@ function criaform($iddep = null) {
         Departamento : <input type="text" id="departamento_id" name="departamento_id" value="<?php echo $iddep ?>"  /> | <a href="cad_prod.php?acao=buscadep">Buscar Departamentos </a><br>          
         Descricao  <input type="text" name="descricao" value="Coca Cola Lata" /><br>
         Custo  <input type="text" id="custo" name="custo" value="3,50" /><br>
-        
+
         <input type="submit" value="Inserir">
 
     </form>
@@ -210,19 +210,24 @@ function navegacao($pagina = 1, $total = 0) {
  */
 function salvaRegistro($dados) {
     GLOBAL $con;
-  
-    
+
+
     //Validação Server Side
-    $erro_mg='';
-    if (!isset($dados['descricao']) || $dados['descricao']==''){$erro_mg .=' descricao é um campo obrigatorio '.PHP_EOL;};
-    if (!isset($dados['custo']) || $dados['custo']==''){$erro_mg .=' custo é um campo obrigatorio '.PHP_EOL;};
-    if (!isset($dados['departamento_id']) || $dados['departamento_id']==''){$erro_mg .=' Departamento é um campo obrigatorio '.PHP_EOL;};    
-    if (strlen($erro_mg)>0){ 
-        die("<h1>Erro de Validação!</h1>".$erro_mg. " Verifique!");
-        header('Location:erro.php');
+    $erro_mg = '';
+    if (!isset($dados['descricao']) || $dados['descricao'] == '') {
+        $erro_mg .=' descricao é um campo obrigatorio ' . PHP_EOL;
+    };
+    if (!isset($dados['custo']) || $dados['custo'] == '') {
+        $erro_mg .=' custo é um campo obrigatorio ' . PHP_EOL;
+    };
+    if (!isset($dados['departamento_id']) || $dados['departamento_id'] == '') {
+        $erro_mg .=' Departamento é um campo obrigatorio ' . PHP_EOL;
+    };
+    if (strlen($erro_mg) > 0) {
+       die("<h1>Erro de Validação!</h1>" . $erro_mg . " Verifique!");      
     }
 
-    
+
     //grava no Banco
     $dados['ativo'] = 1;
     $query = "INSERT INTO produtos(descricao,departamento_id,custo,ativo)" .
@@ -372,20 +377,20 @@ function criaFormBuscadep($texto = null) {
                 </tr>
             </thead>
             <tbody>
-    <?php
-    if (strlen($texto) < 3) {
-        echo "<tr ><td colspan='3'>Nenhum Registro</td></tr>";
-    } else
-        do {
-            echo "
+                <?php
+                if (strlen($texto) < 3) {
+                    echo "<tr ><td colspan='3'>Nenhum Registro</td></tr>";
+                } else
+                    do {
+                        echo "
                         <tr>
 
                         <td>" . $linha['id'] . "</td>                
                         <td>" . $linha['descricao'] . "</td>                
                         <td> <a href='cad_prod.php?acao=cadastro&iddep=" . $linha['id'] . "'>Selecionar</a> </td> 
                         </tr>";
-        } while ($linha = mysql_fetch_assoc($qry_limitada));
-    ?>
+                    } while ($linha = mysql_fetch_assoc($qry_limitada));
+                ?>
             </tbody>
         </table>
 
