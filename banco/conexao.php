@@ -4,7 +4,7 @@
  * @fabioalvaro
  */
 $host = "localhost";
-$db = "controleestoquedb";
+$db = "fabioalvaro13_dev";
 $user = "root";
 $pass = "toor";
 $con = mysql_connect($host, $user, $pass)
