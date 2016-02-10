@@ -325,6 +325,7 @@ if (sizeof($_POST) == 0) {
 
 /**
  * Busca o Departamento
+ * @param string $texto campo que deve ser preenchida a busca por default
  */
 function criaFormBuscadep($texto = null) {
     //mostra resultados caso tenha sido informado
