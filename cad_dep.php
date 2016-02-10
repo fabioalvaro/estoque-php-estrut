@@ -1,65 +1,68 @@
 
 
+
+
 <?php
+/**
+ * Cadastro de Departamentos CRUD
+ * 
+ * @author Fabio Alvaro
+ */
+
+//adiciona a referencia ao banco
 include_once 'banco/conexao.php'; //include do banco
 
 
+/**
+ * Remove o registro pelo ID  
+ * @param type $id 
+ */
+function removeRegistro($id) {
+    GLOBAL $con;
 
-function criaFormExclusao2($id){
-    ?>
-    <form name="frmdelete" action="cad_dep.php" method="POST"
-            style="background-color: yellow">
-        <input type="hidden" name="id" value="" />
-        <input type="hidden" name="post_action" value="excluir" />
-        
-        Tem certeza que deseja excluir o registro <?php echo $id; ?>?
-        <input type="submit" value="SIM" name="btnsim" />
-        <input type="reset" value="NAO" name="btnnao" />
-        
-    </form>
-    
-    <?php
+    $query = "delete from departamentos where id='" . $id . "'";
+
+    mysql_query($query, $con) or die(mysql_error());
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function criaformExclusao($id){
+/**
+ * Cria o formulario de exclusao para confirmar com o usuario
+ * antes da operacao
+ * @param type $id é o identificado do registro
+ */
+function criaformExclusao($id) {
     ?>
     <form name="frmdelete" action="cad_dep.php" method="POST"
-           style="background-color: yellow">
+          style="background-color: yellow">
         <input type="hidden" name="id" id="id" value="<?php echo $id ?>" />        
         <input type="hidden" name="acao_post" id="acao_post" value="excluir" />
         Tem certeza que deseja excluir o registro <?php echo $id ?>?
         <input type="submit" value="SIM" name="btnsim" />
         <input type="reset" value="NAO" name="btnnao" onclick="window.history.back();"/>
-        
+
     </form>
+    <?php
+}
+
+/**
+ * Cria o Formulario de edicao
+ * @param type $idDepartamento id que ira ser editado
+ */
+function criaformEdicao($idDepartamento) {
+    //ir no banco e buscar o registro completamente    
+    global $con;
+
+    $qry_limitada = mysql_query('SELECT * from departamentos WHERE id=' . $idDepartamento);
+    $linha = mysql_fetch_assoc($qry_limitada);
+    //var_dump($linha);
+    ?>
+    <form name="formeditar" id="formeditar" action="cad_dep.php" 
+          method="POST"  style="background-color: green">
+        <input type="hidden" name="acao_post" id="acao_post" value="editar" />
+        Id: <?php echo $idDepartamento; ?><input type="hidden" id="id" name="id" value="<?php echo $idDepartamento; ?>" /><br>
+        Descrição:<input type="text" id="descricao" name="descricao" value="<?php echo $linha['descricao'] ?>" /><br>
+        <input type="submit" value="Atualizar" name="btnatualizar" />
+    </form>  
     <?php
 }
 
@@ -105,17 +108,17 @@ function mostraGrid() {
             </tr>
         </thead>
         <tbody>
-            <?php
-            do {
-                echo "
+    <?php
+    do {
+        echo "
                 <tr>
                 <td>" . $linha['id'] . "</td>
                 <td>" . $linha['descricao'] . "</td>
-                <td> <a href='cad_dep.php?acao=editar&id=".$linha['id']."'>alterar</a> | 
-                <a href='cad_dep.php?acao=excluir&id=".$linha['id']."'>excluir</a>  </td> 
+                <td> <a href='cad_dep.php?acao=editar&id=" . $linha['id'] . "'>alterar</a> | 
+                <a href='cad_dep.php?acao=excluir&id=" . $linha['id'] . "'>excluir</a>  </td> 
                 </tr>";
-            } while ($linha = mysql_fetch_assoc($qry_limitada));
-            ?>
+    } while ($linha = mysql_fetch_assoc($qry_limitada));
+    ?>
         </tbody>
     </table>
     <?php
@@ -134,10 +137,10 @@ function navegacao($pagina = 1, $total = 0) {
     $total_reg = 3;
     //calcula quantas telas
     $maxpaginas = intval($total / $total_reg);
-    
+
     //adiciona mais uma tela em caso de divisao com quebra
     $temmod = $total % $total_reg;
-    
+
     if ($temmod)
         $maxpaginas = $maxpaginas + 1;
 
@@ -189,28 +192,29 @@ function salvaRegistro($descricao) {
 
     mysql_query($query, $con) or die(mysql_error());
 }
+
 /**
  * Funcao que atualiza os registros do banco de dados referente a tabela 
  * Departamentos 
  * @param type $dados um array que simboliza os dados a serem persistidos na
  * tabela
  */
-function atualizaRegistro($dados){   
+function atualizaRegistro($dados) {
     GLOBAL $con;
-    
+
     //recebendo os valores do array de entrada.
-    $id= $dados['id'];
+    $id = $dados['id'];
     $descricao = $dados['descricao'];
-    
-    
+
+
     $query = "UPDATE departamentos set descricao=" .
-            " '" . $descricao . "' where id='".$id."'";
-    
-    mysql_query($query, $con) or die(mysql_error());    
+            " '" . $descricao . "' where id='" . $id . "'";
+
+    mysql_query($query, $con) or die(mysql_error());
 }
 
 /**
- * Funcao que desenha o formulario na tela
+ * Funcao que desenha o formulario de insercao
  * @param nao precisa
  * @return Formulario HTML
  */
@@ -242,92 +246,55 @@ $_SESSION['pagina'] = isset($_GET['pagina']) ? $_GET['pagina'] : null;
 //verifica se veio por post pagina (salvou?)
 if (sizeof($_POST) == 0) {
     // Desenha o form de inserir 
-    $acao = isset($_GET['acao'])?$_GET['acao']:null;
-    $id = isset($_GET['id'])?$_GET['id']:null;
-    
-    
-    if ($acao==null){      
-        
+    $acao = isset($_GET['acao']) ? $_GET['acao'] : null;
+    $id = isset($_GET['id']) ? $_GET['id'] : null;
+
+
+    if ($acao == null) {
+
         criaform();
         mostraGrid();
     }
     //mostra form de edicao
-    if ($acao=='editar'){
-        criaformEdicao($id);    
+    if ($acao == 'editar') {
+        criaformEdicao($id);
     }
     //mostra o form de exclusao
-    if($acao=='excluir'){
+    if ($acao == 'excluir') {
         criaformExclusao($id);
     }
 } else {
     // mostra o que foi recebido do post e 
     // faco uma acao dependendo do que foi requisitado
-    
     //estou vindo do inserir ou do atualizar ou excluir?
-    $id= isset($_POST['id'])?$_POST['id']:null;
-    $acao_post= isset($_POST['acao_post'])?$_POST['acao_post']:null;
-    
-    if ($id==null){
+    $id = isset($_POST['id']) ? $_POST['id'] : null;
+    $acao_post = isset($_POST['acao_post']) ? $_POST['acao_post'] : null;
+
+    if ($id == null) {
         salvaRegistro($_POST['descricao']);
         echo "Registro cadastrado com sucesso! ";
         echo "<br><a href='cad_dep.php'> voltar</a>";
     }
-    
+
     //Atualizar
-    if ($id!=null &&  $acao_post=='editar'){
-        $pacoteenvio['id']=$id;
-        $pacoteenvio['descricao']=$_POST['descricao'];
+    if ($id != null && $acao_post == 'editar') {
+        $pacoteenvio['id'] = $id;
+        $pacoteenvio['descricao'] = $_POST['descricao'];
         atualizaRegistro($pacoteenvio);
         echo "Registro Atualizado com sucesso! ";
         echo "<br><a href='cad_dep.php'> Voltar</a>";
     }
-    
+
     // Excluir
-    if ($id!=null &&  $acao_post=='excluir'){        
+    if ($id != null && $acao_post == 'excluir') {
         removeRegistro($id);
         echo "Registro Removido com sucesso! ";
         echo "<br><a href='cad_dep.php'> Voltar</a>";
-    }    
-    
-    
-}
-
-/**
- * Remove o registro pelo ID  
- * @param type $id 
- */
-function removeRegistro($id){
-    GLOBAL $con;
-    
-    $query = "delete from departamentos where id='".$id."'";
-    
-    mysql_query($query, $con) or die(mysql_error());        
+    }
 }
 
 
-/**
- * 
- * @param type $idDepartamento id que ira ser editado
- */
-function criaformEdicao($idDepartamento){
-    //ir no banco e buscar o registro completamente    
-    global $con;
-    
-    $qry_limitada = mysql_query('SELECT * from departamentos WHERE id='.$idDepartamento);
-    $linha = mysql_fetch_assoc($qry_limitada);    
-    //var_dump($linha);
-    
-    ?>
-    <form name="formeditar" id="formeditar" action="cad_dep.php" 
-          method="POST"  style="background-color: green">
-        <input type="hidden" name="acao_post" id="acao_post" value="editar" />
-        Id: <?php echo $idDepartamento;?><input type="hidden" id="id" name="id" value="<?php echo $idDepartamento;?>" /><br>
-        Descrição:<input type="text" id="descricao" name="descricao" value="<?php echo $linha['descricao']?>" /><br>
-       <input type="submit" value="Atualizar" name="btnatualizar" />
-    </form>  
-    <?php
-    
-}
+
 
 //Insere o rodape da pagina.
 include_once 'comum/base.php';
