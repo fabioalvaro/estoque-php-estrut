@@ -51,7 +51,7 @@ function mostraGrid() {
                 <tr>
                 <td>" . $linha['id'] . "</td>
                 <td>" . $linha['descricao'] . "</td>
-                <td> <a href='cad_dep.php?acao=edit&id=123'>alterar</a> | 
+                <td> <a href='cad_dep.php?acao=edit&id=".$linha['id']."'>alterar</a> | 
                 <a href='cad_dep.php?acao=excluir&id=123'>excluir</a>  </td> 
                 </tr>";
             } while ($linha = mysql_fetch_assoc($qry_limitada));
@@ -129,6 +129,29 @@ function salvaRegistro($descricao) {
 
     mysql_query($query, $con) or die(mysql_error());
 }
+/**
+ * Funcao que atualiza os registros do banco de dados referente a tabela 
+ * Departamentos 
+ * @param type $dados um array que simboliza os dados a serem persistidos na
+ * tabela
+ */
+function atualizaRegistro($dados){
+    //var_dump($dados);die();
+    
+    GLOBAL $con;
+    
+    //recebendo os valores do array de entrada.
+    $id= $dados['id'];
+    $descricao = $dados['descricao'];
+    
+    
+    $query = "UPDATE departamentos set descricao=" .
+            " '" . $descricao . "' where id='".$id."'";
+
+    
+    
+    mysql_query($query, $con) or die(mysql_error());    
+}
 
 /**
  * Funcao que desenha o formulario na tela
@@ -162,14 +185,64 @@ $_SESSION['pagina'] = isset($_GET['pagina']) ? $_GET['pagina'] : null;
 
 //verifica se veio por post pagina (salvou?)
 if (sizeof($_POST) == 0) {
-    // desenha o form
-    criaform();
-    mostraGrid();
+    // Desenha o form de inserir 
+    $acao = isset($_GET['acao'])?$_GET['acao']:null;
+    $id = isset($_GET['id'])?$_GET['id']:null;
+    if ($acao==null){
+        criaform();
+        mostraGrid();
+    }else{
+        criaformEdicao($id);    
+    }
+        
+    
+    
+    
+    
+    
+    
 } else {
-    //mostra o que foi recebido do post e apenas informo
-    salvaRegistro($_POST['descricao']);
-    echo "Registro cadastrado com sucesso! ";
-    echo "<br><a href='cad_dep.php'> voltar</a>";
+    // mostra o que foi recebido do post e apenas informo
+    
+    //estou vindo do inserir ou do atualizar?
+    $id= isset($_POST['id'])?$_POST['id']:null;
+    
+    if ($id==null){
+        salvaRegistro($_POST['descricao']);
+        echo "Registro cadastrado com sucesso! ";
+        echo "<br><a href='cad_dep.php'> voltar</a>";
+    }else{
+        $pacoteenvio['id']=$id;
+        $pacoteenvio['descricao']=$_POST['descricao'];
+        atualizaRegistro($pacoteenvio);
+        echo "Registro Atualizado com sucesso! ";
+        echo "<br><a href='cad_dep.php'> Voltar</a>";
+    }
+    die("para mano!");
+    
+    
+}
+
+/**
+ * 
+ * @param type $idDepartamento id que ira ser editado
+ */
+function criaformEdicao($idDepartamento){
+    //ir no banco e buscar o registro completamente    
+    global $con;
+    
+    $qry_limitada = mysql_query('SELECT * from departamentos WHERE id='.$idDepartamento);
+    $linha = mysql_fetch_assoc($qry_limitada);    
+    //var_dump($linha);
+    
+    ?>
+    <form name="formeditar" id="formeditar" action="cad_dep.php?acao=editando" method="POST"  style="background-color: green">
+        Id: <?php echo $idDepartamento;?><input type="hidden" id="id" name="id" value="<?php echo $idDepartamento;?>" /><br>
+        Descrição:<input type="text" id="descricao" name="descricao" value="<?php echo $linha['descricao']?>" /><br>
+       <input type="submit" value="Atualizar" name="btnatualizar" />
+    </form>  
+    <?php
+    
 }
 
 //Insere o rodape da pagina.
