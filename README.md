@@ -1,6 +1,6 @@
 Slpkg v3.0.9
 ============
-    image:: https://raw.githubusercontent.com/dslackw/images/master/slpkg/slpkg_package.png
+..image:: https://raw.githubusercontent.com/dslackw/images/master/slpkg/slpkg_package.png
 
 # estoque-php-estrut
 Controle de Estoque PHP Estruturado 
