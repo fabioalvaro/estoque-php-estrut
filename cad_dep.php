@@ -1,17 +1,11 @@
-
-
-
-
 <?php
 /**
  * Cadastro de Departamentos CRUD
  * 
  * @author Fabio Alvaro
  */
-
-//adiciona a referencia ao banco
+//Adiciona a referencia ao banco
 include_once 'banco/conexao.php'; //include do banco
-
 
 /**
  * Remove o registro pelo ID  
@@ -63,6 +57,23 @@ function criaformEdicao($idDepartamento) {
         Descrição:<input type="text" id="descricao" name="descricao" value="<?php echo $linha['descricao'] ?>" /><br>
         <input type="submit" value="Atualizar" name="btnatualizar" />
     </form>  
+    <?php
+}
+
+/**
+ * Cria o formulario de insercao
+ * @param nao precisa
+ * @return Formulario HTML
+ */
+function criaform() {
+    //formulario aqui
+    ?>
+    <form action="cad_dep.php" 
+          method="post" 
+          style="background-color: grey">
+        Descricao:<input type="text" name="descricao" id="descricao">
+        <input type="submit" value="Inserir">
+    </form>
     <?php
 }
 
@@ -121,115 +132,98 @@ function mostraGrid() {
     ?>
         </tbody>
     </table>
-    <?php
-    echo navegacao($pc, $total_registros);
-}
+            <?php
+            echo navegacao($pc, $total_registros);
+        }
 
-/**
- * Essa função cria um paginador style pra ficar junto do grid
- * que mostra os registros na tela.
- * 
- * @param type $pagina página atual
- * @param type $total total de registro as serem paginados
- */
-function navegacao($pagina = 1, $total = 0) {
-    //maximo de registros por tela
-    $total_reg = 3;
-    //calcula quantas telas
-    $maxpaginas = intval($total / $total_reg);
+        /**
+         * Essa função cria um paginador style pra ficar junto do grid
+         * que mostra os registros na tela.
+         * 
+         * @param type $pagina página atual
+         * @param type $total total de registro as serem paginados
+         */
+        function navegacao($pagina = 1, $total = 0) {
+            //maximo de registros por tela
+            $total_reg = 3;
+            //calcula quantas telas
+            $maxpaginas = intval($total / $total_reg);
 
-    //adiciona mais uma tela em caso de divisao com quebra
-    $temmod = $total % $total_reg;
+            //adiciona mais uma tela em caso de divisao com quebra
+            $temmod = $total % $total_reg;
 
-    if ($temmod)
-        $maxpaginas = $maxpaginas + 1;
+            if ($temmod)
+                $maxpaginas = $maxpaginas + 1;
 
-    // decide primeira
-    if ($pagina == 1)
-        $link_primeiro = " << ";
-    else {
-        $link_primeiro = "<a href='?pagina=1'><<</a>";
-    }
+            // decide primeira
+            if ($pagina == 1)
+                $link_primeiro = " << ";
+            else {
+                $link_primeiro = "<a href='?pagina=1'><<</a>";
+            }
 
-    //decide anterior 
-    if ($pagina == 1)
-        $link_anterior = " < ";
-    else {
-        $anterior = $pagina - 1;
-        $link_anterior = "<a href='?pagina=" . $anterior . "'><</a>";
-    }
+            //decide anterior 
+            if ($pagina == 1)
+                $link_anterior = " < ";
+            else {
+                $anterior = $pagina - 1;
+                $link_anterior = "<a href='?pagina=" . $anterior . "'><</a>";
+            }
 
-    // decide proxima
-    if ($maxpaginas == $pagina)
-        $link_posterior = " > ";
-    else {
-        $link_posterior = "<a href='?pagina=" . ($pagina + 1) . "'> > </a>";
-    }
-    //decide ultima
-    if ($maxpaginas == $pagina)
-        $link_ultimo = " >> ";
-    else {
-        $link_ultimo = "<a href='?pagina=" . $maxpaginas . "'>>></a>";
-    }
+            // decide proxima
+            if ($maxpaginas == $pagina)
+                $link_posterior = " > ";
+            else {
+                $link_posterior = "<a href='?pagina=" . ($pagina + 1) . "'> > </a>";
+            }
+            //decide ultima
+            if ($maxpaginas == $pagina)
+                $link_ultimo = " >> ";
+            else {
+                $link_ultimo = "<a href='?pagina=" . $maxpaginas . "'>>></a>";
+            }
 
-    $label_total = ' Total de Registros: ' . $total;
+            $label_total = ' Total de Registros: ' . $total;
 
-    //Monta a barra de Navegacao
-    echo "<br>";
-    echo $link_primeiro . "  |  " . $link_anterior . " | " . $link_posterior . " | " . $link_ultimo . " " . $label_total;
-}
+            //Monta a barra de Navegacao
+            echo "<br>";
+            echo $link_primeiro . "  |  " . $link_anterior . " | " . $link_posterior . " | " . $link_ultimo . " " . $label_total;
+        }
 
-/**
- * Funcao que grava o departamento no banco
- * @global type $con variavel global
- * @param type $descricao valor a ser gravado.
- */
-function salvaRegistro($descricao) {
-    GLOBAL $con;
+        /**
+         * Funcao que grava o departamento no banco
+         * @global type $con variavel global
+         * @param type $descricao valor a ser gravado.
+         */
+        function salvaRegistro($descricao) {
+            GLOBAL $con;
 
-    $query = "INSERT INTO departamentos(descricao)" .
-            " VALUES('" . $descricao . "')";
+            $query = "INSERT INTO departamentos(descricao)" .
+                    " VALUES('" . $descricao . "')";
 
-    mysql_query($query, $con) or die(mysql_error());
-}
+            mysql_query($query, $con) or die(mysql_error());
+        }
 
-/**
- * Funcao que atualiza os registros do banco de dados referente a tabela 
- * Departamentos 
- * @param type $dados um array que simboliza os dados a serem persistidos na
- * tabela
- */
-function atualizaRegistro($dados) {
-    GLOBAL $con;
+        /**
+         * Funcao que atualiza os registros do banco de dados referente a tabela 
+         * Departamentos 
+         * @param type $dados um array que simboliza os dados a serem persistidos na
+         * tabela
+         */
+        function atualizaRegistro($dados) {
+            GLOBAL $con;
 
-    //recebendo os valores do array de entrada.
-    $id = $dados['id'];
-    $descricao = $dados['descricao'];
+            //recebendo os valores do array de entrada.
+            $id = $dados['id'];
+            $descricao = $dados['descricao'];
 
 
-    $query = "UPDATE departamentos set descricao=" .
-            " '" . $descricao . "' where id='" . $id . "'";
+            $query = "UPDATE departamentos set descricao=" .
+                    " '" . $descricao . "' where id='" . $id . "'";
 
-    mysql_query($query, $con) or die(mysql_error());
-}
-
-/**
- * Funcao que desenha o formulario de insercao
- * @param nao precisa
- * @return Formulario HTML
- */
-function criaform() {
-    //formulario aqui
-    ?>
-    <form action="cad_dep.php" 
-          method="post" 
-          style="background-color: grey">
-        Descricao:<input type="text" name="descricao" id="descricao">
-        <input type="submit" value="Inserir">
-    </form>
-    <?php
-}
-?>
+            mysql_query($query, $con) or die(mysql_error());
+        }
+        ?>
 
 
 
