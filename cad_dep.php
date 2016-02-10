@@ -3,6 +3,66 @@
 <?php
 include_once 'banco/conexao.php'; //include do banco
 
+
+
+function criaFormExclusao2($id){
+    ?>
+    <form name="frmdelete" action="cad_dep.php" method="POST"
+            style="background-color: yellow">
+        <input type="hidden" name="id" value="" />
+        <input type="hidden" name="post_action" value="excluir" />
+        
+        Tem certeza que deseja excluir o registro <?php echo $id; ?>?
+        <input type="submit" value="SIM" name="btnsim" />
+        <input type="reset" value="NAO" name="btnnao" />
+        
+    </form>
+    
+    <?php
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function criaformExclusao($id){
+    ?>
+    <form name="frmdelete" action="cad_dep.php" method="POST"
+           style="background-color: yellow">
+        <input type="hidden" name="id" id="id" value="<?php echo $id ?>" />        
+        <input type="hidden" name="acao_post" id="acao_post" value="excluir" />
+        Tem certeza que deseja excluir o registro <?php echo $id ?>?
+        <input type="submit" value="SIM" name="btnsim" />
+        <input type="reset" value="NAO" name="btnnao" onclick="window.history.back();"/>
+        
+    </form>
+    <?php
+}
+
 /**
  *  Desenha o grid na tela
  * 
@@ -51,8 +111,8 @@ function mostraGrid() {
                 <tr>
                 <td>" . $linha['id'] . "</td>
                 <td>" . $linha['descricao'] . "</td>
-                <td> <a href='cad_dep.php?acao=edit&id=".$linha['id']."'>alterar</a> | 
-                <a href='cad_dep.php?acao=excluir&id=123'>excluir</a>  </td> 
+                <td> <a href='cad_dep.php?acao=editar&id=".$linha['id']."'>alterar</a> | 
+                <a href='cad_dep.php?acao=excluir&id=".$linha['id']."'>excluir</a>  </td> 
                 </tr>";
             } while ($linha = mysql_fetch_assoc($qry_limitada));
             ?>
@@ -135,9 +195,7 @@ function salvaRegistro($descricao) {
  * @param type $dados um array que simboliza os dados a serem persistidos na
  * tabela
  */
-function atualizaRegistro($dados){
-    //var_dump($dados);die();
-    
+function atualizaRegistro($dados){   
     GLOBAL $con;
     
     //recebendo os valores do array de entrada.
@@ -147,8 +205,6 @@ function atualizaRegistro($dados){
     
     $query = "UPDATE departamentos set descricao=" .
             " '" . $descricao . "' where id='".$id."'";
-
-    
     
     mysql_query($query, $con) or die(mysql_error());    
 }
@@ -188,40 +244,66 @@ if (sizeof($_POST) == 0) {
     // Desenha o form de inserir 
     $acao = isset($_GET['acao'])?$_GET['acao']:null;
     $id = isset($_GET['id'])?$_GET['id']:null;
-    if ($acao==null){
+    
+    
+    if ($acao==null){      
+        
         criaform();
         mostraGrid();
-    }else{
+    }
+    //mostra form de edicao
+    if ($acao=='editar'){
         criaformEdicao($id);    
     }
-        
-    
-    
-    
-    
-    
-    
+    //mostra o form de exclusao
+    if($acao=='excluir'){
+        criaformExclusao($id);
+    }
 } else {
-    // mostra o que foi recebido do post e apenas informo
+    // mostra o que foi recebido do post e 
+    // faco uma acao dependendo do que foi requisitado
     
-    //estou vindo do inserir ou do atualizar?
+    //estou vindo do inserir ou do atualizar ou excluir?
     $id= isset($_POST['id'])?$_POST['id']:null;
+    $acao_post= isset($_POST['acao_post'])?$_POST['acao_post']:null;
     
     if ($id==null){
         salvaRegistro($_POST['descricao']);
         echo "Registro cadastrado com sucesso! ";
         echo "<br><a href='cad_dep.php'> voltar</a>";
-    }else{
+    }
+    
+    //Atualizar
+    if ($id!=null &&  $acao_post=='editar'){
         $pacoteenvio['id']=$id;
         $pacoteenvio['descricao']=$_POST['descricao'];
         atualizaRegistro($pacoteenvio);
         echo "Registro Atualizado com sucesso! ";
         echo "<br><a href='cad_dep.php'> Voltar</a>";
     }
-    die("para mano!");
+    
+    // Excluir
+    if ($id!=null &&  $acao_post=='excluir'){        
+        removeRegistro($id);
+        echo "Registro Removido com sucesso! ";
+        echo "<br><a href='cad_dep.php'> Voltar</a>";
+    }    
     
     
 }
+
+/**
+ * Remove o registro pelo ID  
+ * @param type $id 
+ */
+function removeRegistro($id){
+    GLOBAL $con;
+    
+    $query = "delete from departamentos where id='".$id."'";
+    
+    mysql_query($query, $con) or die(mysql_error());        
+}
+
 
 /**
  * 
@@ -236,7 +318,9 @@ function criaformEdicao($idDepartamento){
     //var_dump($linha);
     
     ?>
-    <form name="formeditar" id="formeditar" action="cad_dep.php?acao=editando" method="POST"  style="background-color: green">
+    <form name="formeditar" id="formeditar" action="cad_dep.php" 
+          method="POST"  style="background-color: green">
+        <input type="hidden" name="acao_post" id="acao_post" value="editar" />
         Id: <?php echo $idDepartamento;?><input type="hidden" id="id" name="id" value="<?php echo $idDepartamento;?>" /><br>
         Descrição:<input type="text" id="descricao" name="descricao" value="<?php echo $linha['descricao']?>" /><br>
        <input type="submit" value="Atualizar" name="btnatualizar" />
