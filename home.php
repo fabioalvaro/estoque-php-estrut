@@ -1,3 +1,5 @@
+<?php session_start(); // Inicia a sessão ?>
+
 <?php include_once 'comum/topo.php'; ?>
         <div>Inventory Control</div>
         <ol type="1">
