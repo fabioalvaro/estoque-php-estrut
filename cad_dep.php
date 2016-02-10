@@ -81,7 +81,7 @@ $_SESSION['pagina'] = isset($_GET['pagina']) ? $_GET['pagina'] : null;
 if (sizeof($_POST) == 0) {
     // desenha o form
     criaform();
-    mostraGrid2();
+    mostraGrid();
 } else {
     //mostra o que foi recebido do post
     salvaRegistro($_POST['descricao']);
@@ -116,7 +116,7 @@ function mostraGrid() {
 
     $pagina = $_SESSION['pagina'];
     
-
+    //Current Page / Pagina Atual
     if (!$pagina) {
         $pc = "1";
     } else {
@@ -154,7 +154,7 @@ function mostraGrid() {
                 <td>" . $linha['id'] . "</td>
                 <td>" . $linha['descricao'] . "</td>
                 <td> <a href='cad_dep.php?acao=edit&id=123'>alterar</a> | 
-                <a href='cad_dep.php?acao=excluir&id=123&pagina=3'>excluir</a>  </td> 
+                <a href='cad_dep.php?acao=excluir&id=123'>excluir</a>  </td> 
                 </tr>";
     } while ($linha = mysql_fetch_assoc($qry_limitada));
     ?>
