@@ -65,18 +65,21 @@ function criaformEdicao($idProduto) {
  * @param nao precisa
  * @return Formulario HTML
  */
-function criaform($iddep=null) {
+function criaform($iddep = null) {
     //formulario aqui
     ?>
     <form action="cad_prod.php" 
           method="post" 
           style="background-color: grey">
+        Departamento : <input type="text" id="departamento_id" name="departamento_id" value="<?php echo $iddep ?>"  /> | <a href="cad_prod.php?acao=buscadep">Buscar Departamentos </a><br>          
         Descricao  <input type="text" name="descricao" value="Coca Cola Lata" /><br>
         Custo  <input type="text" id="custo" name="custo" value="3,50" /><br>
-        Departamento : <input type="text" id="departamento_id" name="departamento_id" value="<?php echo $iddep?>"  />
-         | <a href="cad_prod.php?acao=buscadep">Buscar Departamentos </a><br>          
+        
         <input type="submit" value="Inserir">
+
     </form>
+
+
     <?php
 }
 
@@ -207,8 +210,21 @@ function navegacao($pagina = 1, $total = 0) {
  */
 function salvaRegistro($dados) {
     GLOBAL $con;
-    $dados['ativo'] = 1;
+  
+    
+    //Validação Server Side
+    $erro_mg='';
+    if (!isset($dados['descricao']) || $dados['descricao']==''){$erro_mg .=' descricao é um campo obrigatorio '.PHP_EOL;};
+    if (!isset($dados['custo']) || $dados['custo']==''){$erro_mg .=' custo é um campo obrigatorio '.PHP_EOL;};
+    if (!isset($dados['departamento_id']) || $dados['departamento_id']==''){$erro_mg .=' Departamento é um campo obrigatorio '.PHP_EOL;};    
+    if (strlen($erro_mg)>0){ 
+        die("<h1>Erro de Validação!</h1>".$erro_mg. " Verifique!");
+        header('Location:erro.php');
+    }
 
+    
+    //grava no Banco
+    $dados['ativo'] = 1;
     $query = "INSERT INTO produtos(descricao,departamento_id,custo,ativo)" .
             " VALUES('" . $dados['descricao'] . "','" . $dados['departamento_id'] . "','" . $dados['custo'] . "','" . $dados['ativo'] . "')";
 
@@ -251,9 +267,10 @@ $_SESSION['pagina'] = isset($_GET['pagina']) ? $_GET['pagina'] : null;
 
 //verifica se veio por post pagina (salvou?)
 if (sizeof($_POST) == 0) {
-    
-    
-    
+
+
+
+
     // Desenha o form de inserir 
     $acao = isset($_GET['acao']) ? $_GET['acao'] : null;
     $id = isset($_GET['id']) ? $_GET['id'] : null;
@@ -267,8 +284,8 @@ if (sizeof($_POST) == 0) {
         $iddep = isset($_GET['iddep']) ? $_GET['iddep'] : null;
         criaform($iddep);
         mostraGrid();
-    }    
-    
+    }
+
     //mostra form de edicao
     if ($acao == 'editar') {
         criaformEdicao($id);
@@ -280,14 +297,11 @@ if (sizeof($_POST) == 0) {
 
     //buscar departamentos
     if ($acao == 'buscadep') {
-        criaFormBuscadep();        
-        
+        criaFormBuscadep();
     }
-    
-    
 } else {
-    
-    
+
+
     // mostra o que foi recebido do post e 
     // faco uma acao dependendo do que foi requisitado
     //estou vindo do inserir ou do atualizar ou excluir?
@@ -317,10 +331,9 @@ if (sizeof($_POST) == 0) {
     }
 
     //Post do buscar departamentos
-    if ($acao_post == 'buscadep') {        
+    if ($acao_post == 'buscadep') {
         criaFormBuscadep($_POST['busca']);
     }
-   
 }
 
 /**
@@ -329,26 +342,25 @@ if (sizeof($_POST) == 0) {
  */
 function criaFormBuscadep($texto = null) {
     //mostra resultados caso tenha sido informado
-    if ($texto != null) {       
+    if ($texto != null) {
 
         global $con;
         $busca = 'select * from departamentos where upper(descricao) like upper("%' . $texto . '%")';
-      
-        if (strlen($texto) < 3) {            
+
+        if (strlen($texto) < 3) {
             echo "<h3> Voce deve digitar no minimo 3 caracteres</h3>";
             $busca = 'select * from departamentos where id =-1';
         }
         $qry_limitada = mysql_query($busca);
         $linha = mysql_fetch_assoc($qry_limitada);
-    }else{
-        
+    } else {
         
     }
     ?>
     <form name="frmbusca" action="cad_prod.php?acao=buscadep&acao2=post" method="POST">
-        <h1>Busca departamentos</h1>
+        <h2>Cad.Produtos > Busca departamentos</h2>
         <input type="hidden" name="acao_post" id="acao_post" value="buscadep" />
-        Descricao: <input type="text" name="busca" id="busca" value="<?php echo $texto?>" /><br>
+        Descricao do departamento: <input type="text" name="busca" id="busca" value="<?php echo $texto ?>" /><br>
         <input type="submit" value="Buscar" name="btnbuscardep" /><br><hr>
         Retorno:<br>
         <table border="1">
@@ -360,22 +372,20 @@ function criaFormBuscadep($texto = null) {
                 </tr>
             </thead>
             <tbody>
-                <?php
-                if (strlen($texto)<3)
-                {
-                    echo "<tr ><td colspan='3'>Nenhum Registro</td></tr>";
-                }
-                else
-                do {
-                    echo "
+    <?php
+    if (strlen($texto) < 3) {
+        echo "<tr ><td colspan='3'>Nenhum Registro</td></tr>";
+    } else
+        do {
+            echo "
                         <tr>
 
                         <td>" . $linha['id'] . "</td>                
                         <td>" . $linha['descricao'] . "</td>                
                         <td> <a href='cad_prod.php?acao=cadastro&iddep=" . $linha['id'] . "'>Selecionar</a> </td> 
                         </tr>";
-                } while ($linha = mysql_fetch_assoc($qry_limitada));
-                ?>
+        } while ($linha = mysql_fetch_assoc($qry_limitada));
+    ?>
             </tbody>
         </table>
 
