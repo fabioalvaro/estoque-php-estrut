@@ -74,8 +74,10 @@ function navegacao($pagina = 1, $total = 0) {
     $total_reg = 3;
     //calcula quantas telas
     $maxpaginas = intval($total / $total_reg);
+    
     //adiciona mais uma tela em caso de divisao com quebra
     $temmod = $total % $total_reg;
+    
     if ($temmod)
         $maxpaginas = $maxpaginas + 1;
 
@@ -94,7 +96,7 @@ function navegacao($pagina = 1, $total = 0) {
         $link_anterior = "<a href='?pagina=" . $anterior . "'><</a>";
     }
 
-    //decide proxima
+    // decide proxima
     if ($maxpaginas == $pagina)
         $link_posterior = " > ";
     else {
