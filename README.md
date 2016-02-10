@@ -9,7 +9,7 @@ PHP Inventory Control Structured
 
 3)save the project inside your www dir eg: /var/www/inventory
 
-4)access using http://localhost/invetory
+4)access using http://localhost/inventory
 
 
 5) Enjoy!
