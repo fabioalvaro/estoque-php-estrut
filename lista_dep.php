@@ -1,35 +1,45 @@
+
+<?php
+//Adiciona a referencia ao banco
+include_once 'banco/conexao.php'; //include do banco
+//
+//Busca os registros para o Grid
+global $con;
+$busca = 'SELECT * from departamentos';
+$qry_limitada = mysql_query($busca);
+$linha = mysql_fetch_assoc($qry_limitada);
+
+?>
 <!DOCTYPE html>
-<!--
-To change this license header, choose License Headers in Project Properties.
-To change this template file, choose Tools | Templates
-and open the template in the editor.
--->
 <html>
     <head>
-        <title>Lista departamentos</title>
+        <title>Lista Departamentos</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
     <body>
-        <h1>Lista departamentos</h1>
-        <table border="1">
+        <h1>Lista de Departamentos</h1>
+        <p>Tipo: Completa | Data/Hora Impressão:<?php echo date("d/m/Y h:i:s");?></p>
+        <table border="0">
             <thead>
                 <tr>
-                    <th>id</th>
-                    <th>descricao</th>
+                    <th>Id</th>
+                    <th>Descricao</th>
                 </tr>
             </thead>
             <tbody>
+                 <?php
+            do {
+                echo "
                 <tr>
-                    <td>1</td>
-                    <td>servicos</td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>Produtos</td>
-                </tr>
+                <td>" . $linha['id'] . "</td>
+                <td>" . $linha['descricao'] . "</td>                
+                </tr>";
+            } while ($linha = mysql_fetch_assoc($qry_limitada));
+            ?>
             </tbody>
         </table>
 
     </body>
 </html>
+

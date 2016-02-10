@@ -1,9 +1,4 @@
 <!DOCTYPE html>
-<!--
-To change this license header, choose License Headers in Project Properties.
-To change this template file, choose Tools | Templates
-and open the template in the editor.
--->
 <html>
     <head>
         <title>Lista Produtos</title>
@@ -13,7 +8,29 @@ and open the template in the editor.
     <body>
         <div>
             <h1>Gerar Relatorio Produtos</h1>
-            <a href="lista_prod.php">Gerar Relatorio</a>
+            
+            <form name="frm-pre-listaprod" id="frm-pre-listaprod" 
+                  action="lista_prod.php" method="get">
+                Ordem: 
+                <select name="ordem" id="ordem">
+                    <option value="alfabetica">Alfabetica</option>
+                    <option value="codigo">Codigo</option>
+                </select>
+                <br>
+                
+                Tipo: 
+                <select name="tipo" id="tipo">
+                    <option value="simples">Lista Simples</option>
+                    <option value="departamento">Departamento</option>
+                </select><br>       
+                Filtro Produtos Estoque zero: 
+                <select name="filtro-zero" id="filtro-zero">
+                    <option value="sim">Sim</option>
+                    <option value="nao">Nao</option>
+                </select><br>                  
+                <input type="submit" value="Gerar Relatorio" name="btn-Gerar-Relatorio" />
+            </form>
+     
             
         </div>
     </body>
