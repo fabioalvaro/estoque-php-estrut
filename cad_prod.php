@@ -1,4 +1,7 @@
 <?php
+//Inicia Sessao
+session_start();
+
 /**
  * Cadastro de Departamentos CRUD
  * 
@@ -42,19 +45,39 @@ function criaformExclusao($id) {
  * Cria o Formulario de edicao
  * @param type $idProduto id que ira ser editado
  */
-function criaformEdicao($idProduto) {
+function criaformEdicao($idProduto, $iddep = null) {
+
+    $_SESSION['modo'] = 'edicao';
+    $_SESSION['idproduto'] = $idProduto;
+
     //ir no banco e buscar o registro completamente    
     global $con;
 
     $qry_limitada = mysql_query('SELECT * from produtos WHERE id=' . $idProduto);
     $linha = mysql_fetch_assoc($qry_limitada);
+
+    if ($iddep == null) {
+        $departamento = $linha['departamento_id'];
+    } else {
+        $departamento = $iddep;
+    }
+
+
+
     //var_dump($linha);
     ?>
     <form name="formeditar" id="formeditar" action="cad_prod.php" 
           method="POST"  style="background-color: green">
+        <h2>Alterar Produto</h2>
         <input type="hidden" name="acao_post" id="acao_post" value="editar" />
         Id: <?php echo $idProduto; ?><input type="hidden" id="id" name="id" value="<?php echo $idProduto; ?>" /><br>
         Descrição:<input type="text" id="descricao" name="descricao" value="<?php echo $linha['descricao'] ?>" /><br>
+        Custo:<input type="text" id="custo" name="custo" value="<?php echo $linha['custo'] ?>" /><br>
+        Departamento:<input type="text" id="departamento_id" 
+                            name="departamento_id" 
+                            value="<?php echo $departamento ?>" /> | 
+        <a href="cad_prod.php?acao=buscadep&retorno=edicao">Buscar Depto</a>
+        <br>
         <input type="submit" value="Atualizar" name="btnatualizar" />
     </form>  
     <?php
@@ -67,10 +90,12 @@ function criaformEdicao($idProduto) {
  */
 function criaform($iddep = null) {
     //formulario aqui
+    $_SESSION['modo'] = 'cadastro';
     ?>
     <form action="cad_prod.php" 
           method="post" 
           style="background-color: grey">
+        <h2>Novo Produto</h2>
         Departamento : <input type="text" id="departamento_id" name="departamento_id" value="<?php echo $iddep ?>"  /> | <a href="cad_prod.php?acao=buscadep">Buscar Departamentos </a><br>          
         Descricao  <input type="text" name="descricao" value="Coca Cola Lata" /><br>
         Custo  <input type="text" id="custo" name="custo" value="3,50" /><br>
@@ -247,10 +272,15 @@ function atualizaRegistro($dados) {
     //recebendo os valores do array de entrada.
     $id = $dados['id'];
     $descricao = $dados['descricao'];
+   
 
-
-    $query = "UPDATE produtos set descricao=" .
-            " '" . $descricao . "' where id='" . $id . "'";
+    $query = "UPDATE produtos set ".
+            "descricao='".$descricao."',".
+            "custo='".$dados['custo']."',".
+            "departamento_id='".$dados['departamento_id']."'".
+            " where id='" . $id . "'";
+    
+    
 
     mysql_query($query, $con) or die(mysql_error());
 }
@@ -259,7 +289,7 @@ function atualizaRegistro($dados) {
  * Busca o Departamento
  * @param string $texto campo que deve ser preenchida a busca por default
  */
-function criaFormBuscadep($texto = null) {
+function criaFormBuscadep($texto = null, $retorno = null) {
     //mostra resultados caso tenha sido informado
     if ($texto != null) {
 
@@ -275,13 +305,18 @@ function criaFormBuscadep($texto = null) {
     } else {
         
     }
+
+ 
     ?>
-    <form name="frmbusca" action="cad_prod.php?acao=buscadep&acao2=post" method="POST">
-        <h2>Cad.Produtos > Busca departamentos</h2>
+    <form name="frmbusca" action="cad_prod.php?acao=buscadep&acao2=post" method="POST"
+          style="background-color: pink">
+        <h2>Form de pesquisa de Departamentos</h2>
         <input type="hidden" name="acao_post" id="acao_post" value="buscadep" />
         Descricao do departamento: <input type="text" name="busca" id="busca" value="<?php echo $texto ?>" /><br>
-        <input type="submit" value="Buscar" name="btnbuscardep" /><br><hr>
-        Retorno:<br>
+        
+        <input type="submit" value="Buscar" name="btnbuscardep" />
+        <br><hr>
+
         <table border="1">
             <thead>
                 <tr>
@@ -292,18 +327,30 @@ function criaFormBuscadep($texto = null) {
             </thead>
             <tbody>
                 <?php
+                //mude a acao dependendo do retorno solicitado
+
+                if ($_SESSION['modo'] == 'edicao') {
+                    $link_retorno = 'cad_prod.php?acao=editar&id=' . $_SESSION['idproduto'];
+                } else {
+                    $link_retorno = 'cad_prod.php?acao=cadastro';
+                }
+
+
                 if (strlen($texto) < 3) {
                     echo "<tr ><td colspan='3'>Nenhum Registro</td></tr>";
-                } else
+                } else {
                     do {
                         echo "
                         <tr>
 
                         <td>" . $linha['id'] . "</td>                
                         <td>" . $linha['descricao'] . "</td>                
-                        <td> <a href='cad_prod.php?acao=cadastro&iddep=" . $linha['id'] . "'>Selecionar</a> </td> 
+          <td>
+            <a href=" . $link_retorno . "&iddep=" . $linha['id'] . ">Selecionar</a> 
+          </td> 
                         </tr>";
                     } while ($linha = mysql_fetch_assoc($qry_limitada));
+                }
                 ?>
             </tbody>
         </table>
@@ -326,26 +373,18 @@ function criaFormBuscadep($texto = null) {
 // insere o topo da pagina
 include_once 'comum/topo.php';
 
-echo "<hr> Post<br>";
-var_dump($_POST);
-echo "<hr> Request<br>";
-var_dump($_REQUEST);
-echo "<hr> Get<br>";
-var_dump($_GET);
-echo "<hr>";
+
 
 // verifico se veio por get o numero da pagina
 $_SESSION['pagina'] = isset($_GET['pagina']) ? $_GET['pagina'] : null;
 
 //verifica se veio por post pagina (salvou?)
 if (sizeof($_POST) == 0) {
-
-
-
-
+    //NAO NAO VEIO, VEIO DIRETO!!!
     // Desenha o form de inserir 
     $acao = isset($_GET['acao']) ? $_GET['acao'] : null;
     $id = isset($_GET['id']) ? $_GET['id'] : null;
+    $iddep = isset($_GET['iddep']) ? $_GET['iddep'] : null;
 
 
     if ($acao == null) {
@@ -360,8 +399,13 @@ if (sizeof($_POST) == 0) {
 
     // mostra form de edicao
     if ($acao == 'editar') {
-        criaformEdicao($id);
+
+        criaformEdicao($id, $iddep);
     }
+
+
+
+
     // mostra o form de exclusao
     if ($acao == 'excluir') {
         criaformExclusao($id);
@@ -390,6 +434,8 @@ if (sizeof($_POST) == 0) {
     if ($id != null && $acao_post == 'editar') {
         $pacoteenvio['id'] = $id;
         $pacoteenvio['descricao'] = $_POST['descricao'];
+        $pacoteenvio['custo'] = $_POST['custo'];
+        $pacoteenvio['departamento_id'] = $_POST['departamento_id'];
         atualizaRegistro($pacoteenvio);
         echo "Registro Atualizado com sucesso! ";
         echo "<br><a href='cad_prod.php'> Voltar</a>";
