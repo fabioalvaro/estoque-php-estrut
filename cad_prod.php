@@ -107,7 +107,7 @@ function mostraGrid() {
     //Busca os registros para o Grid
     global $con;
     $busca = 'select P.*,d.descricao as dep_descricao,d.id as dep_id from produtos P
-left join departamentos d on (d.id=P.departamento_id)';
+    left join departamentos d on (d.id=P.departamento_id)';
     $qry_limitada = mysql_query("$busca LIMIT $inicio,$total_reg");
     $linha = mysql_fetch_assoc($qry_limitada);
 
@@ -121,7 +121,6 @@ left join departamentos d on (d.id=P.departamento_id)';
         <thead>
             <tr>
                 <th>id</th>
-
                 <th>descricao</th>
                 <th>custo</th>
                 <th>depto</th>
@@ -224,7 +223,7 @@ function salvaRegistro($dados) {
         $erro_mg .=' Departamento é um campo obrigatorio ' . PHP_EOL;
     };
     if (strlen($erro_mg) > 0) {
-       die("<h1>Erro de Validação!</h1>" . $erro_mg . " Verifique!");      
+        die("<h1>Erro de Validação!</h1>" . $erro_mg . " Verifique!");
     }
 
 
@@ -254,91 +253,6 @@ function atualizaRegistro($dados) {
             " '" . $descricao . "' where id='" . $id . "'";
 
     mysql_query($query, $con) or die(mysql_error());
-}
-?>
-
-
-
-<!-- Continua o fluxo de desenhar a página -->
-
-
-<h1>Cadastro de Produtos</h1>
-<?php
-//insere o topo da pagina
-include_once 'comum/topo.php';
-
-// verifico se veio por get o numero da pagina
-$_SESSION['pagina'] = isset($_GET['pagina']) ? $_GET['pagina'] : null;
-
-//verifica se veio por post pagina (salvou?)
-if (sizeof($_POST) == 0) {
-
-
-
-
-    // Desenha o form de inserir 
-    $acao = isset($_GET['acao']) ? $_GET['acao'] : null;
-    $id = isset($_GET['id']) ? $_GET['id'] : null;
-
-
-    if ($acao == null) {
-        criaform();
-        mostraGrid();
-    }
-    if ($acao == 'cadastro') {
-        $iddep = isset($_GET['iddep']) ? $_GET['iddep'] : null;
-        criaform($iddep);
-        mostraGrid();
-    }
-
-    //mostra form de edicao
-    if ($acao == 'editar') {
-        criaformEdicao($id);
-    }
-    //mostra o form de exclusao
-    if ($acao == 'excluir') {
-        criaformExclusao($id);
-    }
-
-    //buscar departamentos
-    if ($acao == 'buscadep') {
-        criaFormBuscadep();
-    }
-} else {
-
-
-    // mostra o que foi recebido do post e 
-    // faco uma acao dependendo do que foi requisitado
-    //estou vindo do inserir ou do atualizar ou excluir?
-    $id = isset($_POST['id']) ? $_POST['id'] : null;
-    $acao_post = isset($_POST['acao_post']) ? $_POST['acao_post'] : null;
-
-    if ($id == null && $acao_post == null) {
-        salvaRegistro($_POST);
-        echo "Registro cadastrado com sucesso! ";
-        echo "<br><a href='cad_prod.php'> voltar</a>";
-    }
-
-    //Atualizar
-    if ($id != null && $acao_post == 'editar') {
-        $pacoteenvio['id'] = $id;
-        $pacoteenvio['descricao'] = $_POST['descricao'];
-        atualizaRegistro($pacoteenvio);
-        echo "Registro Atualizado com sucesso! ";
-        echo "<br><a href='cad_prod.php'> Voltar</a>";
-    }
-
-    // Excluir
-    if ($id != null && $acao_post == 'excluir') {
-        removeRegistro($id);
-        echo "Registro Removido com sucesso! ";
-        echo "<br><a href='cad_prod.php'> Voltar</a>";
-    }
-
-    //Post do buscar departamentos
-    if ($acao_post == 'buscadep') {
-        criaFormBuscadep($_POST['busca']);
-    }
 }
 
 /**
@@ -400,3 +314,98 @@ function criaFormBuscadep($texto = null) {
     </form>
     <?php
 }
+?>
+
+
+
+<!-- Continua o fluxo de desenhar a página -->
+
+
+<h1>Cadastro de Produtos</h1>
+<?php
+// insere o topo da pagina
+include_once 'comum/topo.php';
+
+echo "<hr> Post<br>";
+var_dump($_POST);
+echo "<hr> Request<br>";
+var_dump($_REQUEST);
+echo "<hr> Get<br>";
+var_dump($_GET);
+echo "<hr>";
+
+// verifico se veio por get o numero da pagina
+$_SESSION['pagina'] = isset($_GET['pagina']) ? $_GET['pagina'] : null;
+
+//verifica se veio por post pagina (salvou?)
+if (sizeof($_POST) == 0) {
+
+
+
+
+    // Desenha o form de inserir 
+    $acao = isset($_GET['acao']) ? $_GET['acao'] : null;
+    $id = isset($_GET['id']) ? $_GET['id'] : null;
+
+
+    if ($acao == null) {
+        criaform();
+        mostraGrid();
+    }
+    if ($acao == 'cadastro') {
+        $iddep = isset($_GET['iddep']) ? $_GET['iddep'] : null;
+        criaform($iddep);
+        mostraGrid();
+    }
+
+    // mostra form de edicao
+    if ($acao == 'editar') {
+        criaformEdicao($id);
+    }
+    // mostra o form de exclusao
+    if ($acao == 'excluir') {
+        criaformExclusao($id);
+    }
+
+    // buscar departamentos
+    if ($acao == 'buscadep') {
+        criaFormBuscadep();
+    }
+} else {
+
+
+    // mostra o que foi recebido do post e 
+    // faco uma acao dependendo do que foi requisitado
+    // estou vindo do inserir ou do atualizar ou excluir?
+    $id = isset($_POST['id']) ? $_POST['id'] : null;
+    $acao_post = isset($_POST['acao_post']) ? $_POST['acao_post'] : null;
+
+    if ($id == null && $acao_post == null) {
+        salvaRegistro($_POST);
+        echo "Registro cadastrado com sucesso! ";
+        echo "<br><a href='cad_prod.php'> voltar</a>";
+    }
+
+    // Atualizar
+    if ($id != null && $acao_post == 'editar') {
+        $pacoteenvio['id'] = $id;
+        $pacoteenvio['descricao'] = $_POST['descricao'];
+        atualizaRegistro($pacoteenvio);
+        echo "Registro Atualizado com sucesso! ";
+        echo "<br><a href='cad_prod.php'> Voltar</a>";
+    }
+
+    // Excluir
+    if ($id != null && $acao_post == 'excluir') {
+        removeRegistro($id);
+        echo "Registro Removido com sucesso! ";
+        echo "<br><a href='cad_prod.php'> Voltar</a>";
+    }
+
+    // Post do buscar departamentos
+    if ($acao_post == 'buscadep') {
+        criaFormBuscadep($_POST['busca']);
+    }
+}
+
+
