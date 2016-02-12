@@ -28,20 +28,16 @@ function removeRegistro($id) {
     if (saldoExiste($linha['produto_id'], $linha['estoque_id'])) {
         //atualiza retirando saldo
         $saldoAtual = saldoByEstoque($linha['produto_id'], $linha['estoque_id']);
-        if ($linha['sinal']=='+'){
-           $saldoAtual_acerto = $saldoAtual - $linha['qtd']; 
-        }
-        else{
+        if ($linha['sinal'] == '+') {
+            $saldoAtual_acerto = $saldoAtual - $linha['qtd'];
+        } else {
             $saldoAtual_acerto = $saldoAtual + $linha['qtd'];
         }
-        
-        
+
+
         saldo_atualiza($linha['produto_id'], $linha['estoque_id'], $saldoAtual_acerto);
     }
-    
 }
-
-
 
 function saldoExiste($produto, $estoque) {
     global $con;
@@ -56,8 +52,6 @@ function saldoExiste($produto, $estoque) {
     } else {
         return 0;
     }
-
-
 }
 
 /**
@@ -69,7 +63,7 @@ function saldoExiste($produto, $estoque) {
  */
 function navegacao($pagina = 1, $total = 0) {
     //maximo de registros por tela
-    $total_reg =20;
+    $total_reg = 20;
     //calcula quantas telas
     $maxpaginas = intval($total / $total_reg);
 
@@ -180,10 +174,11 @@ function mostraGrid() {
                 <th>Produto</th>
                 <th>P. Descricao</th>
                 <th>Estoque</th>
+                                
+                <th>Estoque</th>
                 <th>Tipo Movimento</th>
                 <th>sinal</th>
-                <th>Qtd</th>
-                <th>Estoque</th>
+                <th>Qtd</th>                
                 <th>Acao</th>
             </tr>
         </thead>
@@ -197,9 +192,10 @@ function mostraGrid() {
         "<td>" . $linha['produto_id'] . "</td>" .
         "<td>" . $linha['pdescricao'] . "</td>" .
         "<td>" . $linha['estoque_id'] . "</td>" .
-        "<td>" . $linha['tiposmovimento_id'] . "</td>" .
-        "<td>" . $linha['sinal'] . "</td>" .
+       
         "<td>" . $linha['edescricao'] . "</td>" .
+                 "<td>" . $linha['tiposmovimento_id'] . "</td>" .
+        "<td>" . $linha['sinal'] . "</td>" .
         "<td>" . $linha['qtd'] . "</td>" .
         "<td> <a href='cad_kardex.php?acao=confirmaExcluir&id=" . $linha['id'] . "'>Excluir</a></td>" .
         "</tr>";
@@ -226,7 +222,7 @@ function mostraGrid() {
             //insere na kardex
 
             $dados['tiposmovimento_id'] = $_SESSION['combo_mov'];
-            $dados['sinal'] = ($_SESSION['combo_mov']==1)?'+':'-';
+            $dados['sinal'] = ($_SESSION['combo_mov'] == 1) ? '+' : '-';
             $dados['clifor_id'] = 1;
             $dados['produto_id'] = $_SESSION['produto_id'];
             $dados['estoque_id'] = $_SESSION['estoque_id'];
@@ -268,36 +264,35 @@ function mostraGrid() {
                     $dados['produto_id'] . "','" .
                     $dados['estoque_id'] . "','" .
                     $dados['ativo'] . "','" .
-                    $dados['qtd'] . "', '".$dados['sinal'] . "')";
+                    $dados['qtd'] . "', '" . $dados['sinal'] . "')";
 
             //echo $query;
 
             mysql_query($query, $con) or die(mysql_error());
 
             // Saldo    
-            saldo_grava($dados['produto_id'], $dados['estoque_id'], $dados['qtd'],$dados['sinal']);
+            saldo_grava($dados['produto_id'], $dados['estoque_id'], $dados['qtd'], $dados['sinal']);
         }
 
-        function saldo_grava($produto_id, $estoque_id, $qtd,$sinal) {
+        function saldo_grava($produto_id, $estoque_id, $qtd, $sinal) {
 
             $existe = saldoExiste($produto_id, $estoque_id);
-           
+
 
             if ($existe == false) {
 
-              
+
                 saldo_insere($produto_id, $estoque_id, $qtd);
             }
             if ($existe == true) {
 
-               
-                 $saldoatual = saldoByEstoque($produto_id, $estoque_id);
-                if ($sinal=='+'){
-                  saldo_atualiza($produto_id, $estoque_id, $saldoatual + $qtd);  
-                }else{
-                  saldo_atualiza($produto_id, $estoque_id, $saldoatual-$qtd);  
+
+                $saldoatual = saldoByEstoque($produto_id, $estoque_id);
+                if ($sinal == '+') {
+                    saldo_atualiza($produto_id, $estoque_id, $saldoatual + $qtd);
+                } else {
+                    saldo_atualiza($produto_id, $estoque_id, $saldoatual - $qtd);
                 }
-                
             }
 
             //die("teste");
@@ -377,15 +372,15 @@ function mostraForm1() {
                 <input type="submit" value="Próximo >>" name="lalalal" />
             </form>
                 <?php } ?>
-                <?php
+<?php
 
-                function mostraForm2() {
-                    //Busca os Estoques
-                    global $con;
-                    $busca = 'select id,descricao from estoques';
-                    $res_estoques = mysql_query($busca);
-                    $linha = mysql_fetch_assoc($res_estoques);
-                    ?>
+function mostraForm2() {
+    //Busca os Estoques
+    global $con;
+    $busca = 'select id,descricao from estoques';
+    $res_estoques = mysql_query($busca);
+    $linha = mysql_fetch_assoc($res_estoques);
+    ?>
             <form name="frm" action="cad_kardex.php?acao=step3" method="POST">
                 <p>Selecione o Estoque que deseja movimentar o produto "
             <?php if (isset($_SESSION['produto_id'])) echo $_SESSION['produto_id'] ?>"
@@ -435,7 +430,7 @@ function mostraForm4() { ?>
                 <p>Tipo Movimento <?php if (isset($_SESSION['combo_mov'])) echo $_SESSION['combo_mov'] ?></p><br><br>
                 <input type="submit" value="Finalizar >>" name="lalalal" />
             </form>        
-        <?php } ?>      
+<?php } ?>      
 <?php
 
 function mostraForm5() { ?>
@@ -447,36 +442,36 @@ function mostraForm5() { ?>
         <?php } ?>           
 
 
-        <?php
-        //valida acoes da pagina
-        if ($acao == 'step1') {
-            mostraForm1();
-        }
-        if ($acao == 'step2') {
-            mostraForm2();
-        }
-        if ($acao == 'step3') {
-            mostraForm3();
-        }
-        if ($acao == 'step4') {
-            mostraForm4();
-        }
-        if ($acao == 'step5') {
-            mostraForm5();
-        }
-        if ($acao == 'confirmaExcluir') {
+<?php
+//valida acoes da pagina
+if ($acao == 'step1') {
+    mostraForm1();
+}
+if ($acao == 'step2') {
+    mostraForm2();
+}
+if ($acao == 'step3') {
+    mostraForm3();
+}
+if ($acao == 'step4') {
+    mostraForm4();
+}
+if ($acao == 'step5') {
+    mostraForm5();
+}
+if ($acao == 'confirmaExcluir') {
 
-            $acao_post = isset($_POST['acao_post']) ? $_POST['acao_post'] : null;
-            $id = isset($_GET['id']) ? $_GET['id'] : null;
+    $acao_post = isset($_POST['acao_post']) ? $_POST['acao_post'] : null;
+    $id = isset($_GET['id']) ? $_GET['id'] : null;
 
-            if ($acao_post != null) {
-                removeRegistro($id);
-                mostraForm1();
-            } else {
-                criaformExclusao($id);
-            }
-        }
-        ?>
+    if ($acao_post != null) {
+        removeRegistro($id);
+        mostraForm1();
+    } else {
+        criaformExclusao($id);
+    }
+}
+?>
         <br>
         <?php
         mostraGrid();
