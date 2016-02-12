@@ -200,10 +200,12 @@ function navegacao($pagina = 1, $total = 0) {
  * @param type $descricao valor a ser gravado.
  */
 function salvaRegistro($descricao) {
+    
+  
 
     //Validação Server Side
     $erro_mg = '';
-    if (!isset($dados['descricao']) || $dados['descricao'] == '') {
+    if (!isset($descricao) || $descricao == '') {
         $erro_mg .=' descricao é um campo obrigatorio ' . PHP_EOL;
     };
     if (strlen($erro_mg) > 0) {
