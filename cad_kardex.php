@@ -1,13 +1,72 @@
 <?php
+//inicia a sessao
 session_start();
 
 //Adiciona a referencia ao banco
 include_once 'banco/conexao.php'; //include do banco
-
 // verifico se veio por get o numero da pagina
 $_SESSION['pagina'] = isset($_GET['pagina']) ? $_GET['pagina'] : null;
 
 $acao = isset($_GET['acao']) ? $_GET['acao'] : 'step1';
+
+/**
+ * Remove o registro pelo ID  
+ * @param type $id 
+ */
+function removeRegistro($id) {
+    GLOBAL $con;
+
+    //busca info
+    $querybusca = "select * from kardexs where id='" . $id . "'";
+    $qry = mysql_query($querybusca);
+    $linha = mysql_fetch_assoc($qry);
+
+    //Apagua
+    $query = "delete from kardexs where id='" . $id . "'";
+    mysql_query($query, $con) or die(mysql_error());
+
+    if (saldoExiste($linha['produto_id'], $linha['estoque_id'])) {
+        //atualiza retirando saldo
+        $saldoAtual = saldoByEstoque($linha['produto_id'], $linha['estoque_id']);
+        if ($linha['sinal']=='+'){
+           $saldoAtual_acerto = $saldoAtual - $linha['qtd']; 
+        }
+        else{
+            $saldoAtual_acerto = $saldoAtual + $linha['qtd'];
+        }
+        
+        
+        saldo_atualiza($linha['produto_id'], $linha['estoque_id'], $saldoAtual_acerto);
+    }
+    //die('remove die');
+}
+
+function saldo_da_kardex($id) {
+
+    return 80;
+}
+
+function saldoExiste($produto, $estoque) {
+    global $con;
+    $busca = 'select * from produtos_estoques where idproduto =' . $produto . ' and ' .
+            ' idestoque=' . $estoque . '';
+    $qry = mysql_query($busca);
+
+//    if ($qry==false) 
+//        return false;
+//    else{
+//        return true;
+    $linha = mysql_fetch_assoc($qry);
+    if (sizeof($linha) > 1) {
+        return 1;
+    } else {
+        return 0;
+    }
+
+
+    //var_dump($linha);
+    //return $linha;
+}
 
 /**
  * Essa função cria um paginador style pra ficar junto do grid
@@ -70,7 +129,8 @@ function navegacao($pagina = 1, $total = 0) {
  */
 function criaformExclusao($id) {
     ?>
-    <form name="frmdelete" action="cad_estoque.php" method="POST"
+    <form name="frmdelete" action="cad_kardex.php?acao=confirmaExcluir&id=<?php echo $id ?>" 
+          method="POST"
           style="background-color: yellow">
         <input type="hidden" name="id" id="id" value="<?php echo $id ?>" />        
         <input type="hidden" name="acao_post" id="acao_post" value="excluir" />
@@ -81,7 +141,6 @@ function criaformExclusao($id) {
     </form>
     <?php
 }
-
 
 /**
  *  Desenha o grid na tela
@@ -104,12 +163,16 @@ function mostraGrid() {
     $inicio = $pc - 1;
     $inicio = $inicio * $total_reg;
 
+
     //Busca os registros para o Grid
     global $con;
-    $busca = 'SELECT * from kardexs';
+    $busca = 'select k.*, p.descricao as pdescricao,e.descricao as edescricao
+    from kardexs k
+    left join produtos p on (p.id=k.produto_id)
+    left join estoques e on (e.id=k.estoque_id)';
     $qry_limitada = mysql_query("$busca LIMIT $inicio,$total_reg");
     $linha = mysql_fetch_assoc($qry_limitada);
-    
+
 
     // Total de Registros na tabela    
     $qry_total = mysql_query('SELECT count(*)as total from kardexs');
@@ -123,102 +186,166 @@ function mostraGrid() {
                 <th>Id</th>
                 <th>Data Movimento</th>
                 <th>Produto</th>
+                <th>P. Descricao</th>
                 <th>Estoque</th>
                 <th>Tipo Movimento</th>
+                <th>sinal</th>
                 <th>Qtd</th>
+                <th>Estoque</th>
                 <th>Acao</th>
             </tr>
         </thead>
         <tbody>
-            <?php
-            do {
-                echo "
+    <?php
+    do {
+        echo "
                 <tr>
                 <td>" . $linha['id'] . "</td>
-                <td>" . $linha['created'] . "</td>".
-                "<td>" . $linha['produto_id'] . "</td>".
-                 "<td>" . $linha['estoque_id'] . "</td>".
-                          "<td>" . $linha['tiposmovimento_id'] . "</td>".
-                "<td>" . $linha['qtd'] . "</td>".
-                "<td> <a href='cad_kardex.php?acao=excluir'>Excluir</a></td>".
-                "</tr>";
-                
-            } while ($linha = mysql_fetch_assoc($qry_limitada));
-            ?>
+                <td>" . $linha['created'] . "</td>" .
+        "<td>" . $linha['produto_id'] . "</td>" .
+        "<td>" . $linha['pdescricao'] . "</td>" .
+        "<td>" . $linha['estoque_id'] . "</td>" .
+        "<td>" . $linha['tiposmovimento_id'] . "</td>" .
+        "<td>" . $linha['sinal'] . "</td>" .
+        "<td>" . $linha['edescricao'] . "</td>" .
+        "<td>" . $linha['qtd'] . "</td>" .
+        "<td> <a href='cad_kardex.php?acao=confirmaExcluir&id=" . $linha['id'] . "'>Excluir</a></td>" .
+        "</tr>";
+    } while ($linha = mysql_fetch_assoc($qry_limitada));
+    ?>
         </tbody>
     </table>
-    <?php
-    echo navegacao($pc, $total_registros);
-}
+            <?php
+            echo navegacao($pc, $total_registros);
+        }
+
+        if ($acao == 'step2') {
+            $_SESSION['produto_id'] = $_POST['combo_prod'];
+        }
+        if ($acao == 'step3') {
+            $_SESSION['estoque_id'] = $_POST['combo_estoque'];
+        }
+        if ($acao == 'step4') {
+            $_SESSION['qtd'] = $_POST['qtd'];
+            $_SESSION['combo_mov'] = $_POST['combo_mov'];
+        }
+        if ($acao == 'step5') {
+            //Grava no banco
+            //insere na kardex
+
+            $dados['tiposmovimento_id'] = $_SESSION['combo_mov'];
+            $dados['sinal'] = ($_SESSION['combo_mov']==1)?'+':'-';
+            $dados['clifor_id'] = 1;
+            $dados['produto_id'] = $_SESSION['produto_id'];
+            $dados['estoque_id'] = $_SESSION['estoque_id'];
+            $dados['qtd'] = $_SESSION['qtd'];
+            gravaKardex($dados);
+
+            //atualiza estoque
+        }
+
+        function gravaKardex($dados) {
+            GLOBAL $con;
 
 
-
-if ($acao == 'step2') {
-    $_SESSION['produto_id'] = $_POST['combo_prod'];
-}
-if ($acao == 'step3') {
-    $_SESSION['estoque_id'] = $_POST['combo_estoque'];
-}
-if ($acao == 'step4') {
-    $_SESSION['qtd'] = $_POST['qtd'];
-    $_SESSION['combo_mov'] = $_POST['combo_mov'];
-}
-if ($acao == 'step5') {
-    //Grava no banco
-    
-    //insere na kardex
-   
-    $dados['tiposmovimento_id']=$_SESSION['combo_mov'];
-    $dados['clifor_id']=1;
-    $dados['produto_id']=$_SESSION['produto_id'];
-    $dados['estoque_id']=$_SESSION['estoque_id'];   
-    $dados['qtd']=$_SESSION['qtd']; 
-    gravaKardex($dados);
-    
-    //atualiza estoque
-    
-}
-
-function gravaKardex($dados){
-    GLOBAL $con;
+            //Validação Server Side
+            $erro_mg = '';
+            if (!isset($dados['tiposmovimento_id']) || $dados['tiposmovimento_id'] == '') {
+                $erro_mg .=' tiposmovimento_id é um campo obrigatorio ' . PHP_EOL;
+            };
+            if (!isset($dados['produto_id']) || $dados['produto_id'] == '') {
+                $erro_mg .=' produto_id é um campo obrigatorio ' . PHP_EOL;
+            };
+            if (!isset($dados['estoque_id']) || $dados['estoque_id'] == '') {
+                $erro_mg .=' estoque_id é um campo obrigatorio ' . PHP_EOL;
+            };
+            if (strlen($erro_mg) > 0) {
+                die("<h1>Erro de Validação!</h1>" . $erro_mg . " Verifique!");
+            }
 
 
-    //Validação Server Side
-    $erro_mg = '';
-    if (!isset($dados['tiposmovimento_id']) || $dados['tiposmovimento_id'] == '') {
-        $erro_mg .=' tiposmovimento_id é um campo obrigatorio ' . PHP_EOL;
-    };
-    if (!isset($dados['produto_id']) || $dados['produto_id'] == '') {
-        $erro_mg .=' produto_id é um campo obrigatorio ' . PHP_EOL;
-    };
-    if (!isset($dados['estoque_id']) || $dados['estoque_id'] == '') {
-        $erro_mg .=' estoque_id é um campo obrigatorio ' . PHP_EOL;
-    };
-    if (strlen($erro_mg) > 0) {
-        die("<h1>Erro de Validação!</h1>" . $erro_mg . " Verifique!");
-    }
+            //grava no Banco
+            $dados['ativo'] = 1;
+            $dados['created'] = '2016-01-01 00:00:00';
+            $query = "INSERT INTO kardexs(created,tiposmovimento_id,clifor_id,"
+                    . "produto_id,estoque_id,ativo,qtd,sinal)" .
+                    " VALUES('" .
+                    $dados['created'] . "','" .
+                    $dados['tiposmovimento_id'] . "','" .
+                    $dados['clifor_id'] . "','" .
+                    $dados['produto_id'] . "','" .
+                    $dados['estoque_id'] . "','" .
+                    $dados['ativo'] . "','" .
+                    $dados['qtd'] . "', '".$dados['sinal'] . "')";
 
+            //echo $query;
 
-    //grava no Banco
-    $dados['ativo'] = 1;
-    $dados['created']='2016-01-01 00:00:00';
-    $query = "INSERT INTO kardexs(created,tiposmovimento_id,clifor_id,produto_id,estoque_id,ativo,qtd)" .
-            " VALUES('" . 
-            $dados['created'] . "','" . 
-            $dados['tiposmovimento_id'] . "','" . 
-             $dados['clifor_id'] . "','" . 
-             $dados['produto_id'] . "','" .             
-            $dados['estoque_id'] . "','" . 
-            $dados['ativo'] . "','" . 
-            $dados['qtd'] . "')";
-    
-    echo $query;
+            mysql_query($query, $con) or die(mysql_error());
 
-    mysql_query($query, $con) or die(mysql_error());
-}
+            // Saldo    
+            saldo_grava($dados['produto_id'], $dados['estoque_id'], $dados['qtd'],$dados['sinal']);
+        }
 
- 
-?>
+        function saldo_grava($produto_id, $estoque_id, $qtd,$sinal) {
+
+            $existe = saldoExiste($produto_id, $estoque_id);
+            echo "existe? " . $existe;
+
+            if ($existe == false) {
+
+                echo "entao cria<br>";
+                saldo_insere($produto_id, $estoque_id, $qtd);
+            }
+            if ($existe == true) {
+
+                echo "entao Atualiza<br>";
+                echo $saldoatual = saldoByEstoque($produto_id, $estoque_id);
+                if ($sinal=='+'){
+                  saldo_atualiza($produto_id, $estoque_id, $saldoatual + $qtd);  
+                }else{
+                  saldo_atualiza($produto_id, $estoque_id, $saldoatual-$qtd);  
+                }
+                
+            }
+
+            //die("teste");
+        }
+
+        function saldo_insere($produto_id, $estoque_id, $qtd) {
+            GLOBAL $con;
+            //insere
+            $query_insert = "INSERT INTO produtos_estoques(idproduto,idestoque,qtd)" .
+                    " VALUES('" .
+                    $produto_id . "','" .
+                    $estoque_id . "','" .
+                    $qtd . "')";
+            //echo $query_insert;
+            mysql_query($query_insert, $con) or die(mysql_error());
+        }
+
+        function saldoByEstoque($produto_id, $estoque_id) {
+            global $con;
+            $busca = 'select qtd from produtos_estoques where idproduto =' . $produto_id . ' and ' .
+                    ' idestoque=' . $estoque_id . '';
+            $qry = mysql_query($busca);
+
+//    if ($qry==false) 
+//        return false;
+//    else{
+//        return true;
+            $linha = mysql_fetch_assoc($qry);
+            return $linha['qtd'];
+        }
+
+        function saldo_atualiza($produto_id, $estoque_id, $qtd) {
+            GLOBAL $con;
+            //insere
+            $query_update = "update produtos_estoques set qtd='" . $qtd . "' where " .
+                    " idproduto ='" . $produto_id . "' and idestoque='" .
+                    $estoque_id . "'";
+            mysql_query($query_update, $con) or die(mysql_error());
+        }
+        ?>
 <!DOCTYPE html>
 
 <html>
@@ -229,50 +356,73 @@ function gravaKardex($dados){
     </head>
     <body>
 
-        <h1>Cadastro de Movimento / Kardex</h1>
+        <h1><a href="home.php">Cadastro de Movimento / Kardex</a></h1>
         <hr>
         <a href="cad_kardex.php?acao=step1">PASSO 1</a> > <a href="cad_kardex.php?acao=step2">PASSO 2</a> > <a href="cad_kardex.php?acao=step3">PASSO 3</a>
         <hr>
 
-        <?php
+<?php
 
-        function mostraForm1() { ?>
+function mostraForm1() {
+    //Busca os Produtos
+    global $con;
+    $busca = 'select id,descricao from produtos';
+    $res_prod = mysql_query($busca);
+    $linha = mysql_fetch_assoc($res_prod);
+    ?>
             <form name="frm" action="cad_kardex.php?acao=step2" method="POST">
                 <p>Selecione o produto que deseja movimentar e clique no botão próximo...</p>
                 produto <select name="combo_prod" id="combo_prod">
-                    <option value="1">Coca</option>
-                    <option value="2">Pedra</option>
+
+
+            <?php
+            //Preenche a lista de Produtos 
+            do {
+                echo "<option value='" . $linha['id'] . "'>" . $linha['descricao'] . "</option>";
+            } while ($linha = mysql_fetch_assoc($res_prod));
+            ?>
+
                 </select><br><br>
 
 
                 <input type="submit" value="Próximo >>" name="lalalal" />
             </form>
-<?php } ?>
-<?php
+                <?php } ?>
+                <?php
 
-function mostraForm2() { ?>
+                function mostraForm2() {
+                    //Busca os Estoques
+                    global $con;
+                    $busca = 'select id,descricao from estoques';
+                    $res_estoques = mysql_query($busca);
+                    $linha = mysql_fetch_assoc($res_estoques);
+                    ?>
             <form name="frm" action="cad_kardex.php?acao=step3" method="POST">
                 <p>Selecione o Estoque que deseja movimentar o produto "
-                    <?php if (isset($_SESSION['produto_id'])) echo $_SESSION['produto_id'] ?>"
+            <?php if (isset($_SESSION['produto_id'])) echo $_SESSION['produto_id'] ?>"
                     e clique no botão próximo...</p>
                 Estoque <select name="combo_estoque" id="combo_estoque">
-                    <option value="1">1 Siri Cascudo</option>
-                    <option value="2">2 Praia areia Branca</option>
+            <?php
+            //Preenche a lista de Produtos 
+            do {
+                echo "<option value='" . $linha['id'] . "'>" . $linha['descricao'] . "</option>";
+            } while ($linha = mysql_fetch_assoc($res_estoques));
+            ?>
                 </select><br> <br> 
 
                 <input type="submit" value="Próximo >>" name="lalalal" />
             </form>
-<?php } ?>
+                <?php } ?>
 
-<?php
+                <?php
 
-function mostraForm3() { ?>
+                function mostraForm3() { ?>
             <form name="frm" action="cad_kardex.php?acao=step4" method="POST">
                 <p>Selecione a quantidade e o tipo de movimento que deseja 
                     movimentar.
-                    </p>
-                    <p>Estoque <?php if (isset($_SESSION['estoque_id'])) echo $_SESSION['estoque_id'] ?></p>
-                    <p>Produto <?php if (isset($_SESSION['produto_id'])) echo $_SESSION['produto_id'] ?></p>                
+                </p>
+                <p>Estoque <?php if (isset($_SESSION['estoque_id'])) echo $_SESSION['estoque_id'] ?></p>
+                <p>Produto <?php if (isset($_SESSION['produto_id'])) echo $_SESSION['produto_id'] ?></p>                
                 quantidade: <input type="text" name="qtd" id="qtd"value="50" />
                 Tipo movimento :
                 <select name="combo_mov" id="combo_mov">
@@ -289,26 +439,27 @@ function mostraForm3() { ?>
 function mostraForm4() { ?>
             <form name="frm" action="cad_kardex.php?acao=step5" method="POST">
                 <h2>Form 4</h2>
-                    <p>Confirme os dados:</p>
-                    <p>Estoque <?php if (isset($_SESSION['estoque_id'])) echo $_SESSION['estoque_id'] ?></p>
-                    <p>Produto <?php if (isset($_SESSION['produto_id'])) echo $_SESSION['produto_id'] ?></p>     
-                    <p>Quantidade <?php if (isset($_SESSION['qtd'])) echo $_SESSION['qtd'] ?></p>
-                    <p>Tipo Movimento <?php if (isset($_SESSION['combo_mov'])) echo $_SESSION['combo_mov'] ?></p><br><br>
+                <p>Confirme os dados:</p>
+                <p>Estoque <?php if (isset($_SESSION['estoque_id'])) echo $_SESSION['estoque_id'] ?></p>
+                <p>Produto <?php if (isset($_SESSION['produto_id'])) echo $_SESSION['produto_id'] ?></p>     
+                <p>Quantidade <?php if (isset($_SESSION['qtd'])) echo $_SESSION['qtd'] ?></p>
+                <p>Tipo Movimento <?php if (isset($_SESSION['combo_mov'])) echo $_SESSION['combo_mov'] ?></p><br><br>
                 <input type="submit" value="Finalizar >>" name="lalalal" />
             </form>        
-<?php } ?>      
+        <?php } ?>      
 <?php
 
 function mostraForm5() { ?>
             <form name="frm" action="cad_kardex.php?acao=step1" method="POST">
                 <h2>Form 5</h2>
-                    <p>Processo realizado com sucesso!</p><br><br>
+                <p>Processo realizado com sucesso!</p><br><br>
                 <input type="submit" value="Novo Movimento Kardex" name="lalalal" />
             </form>        
-<?php } ?>           
+        <?php } ?>           
 
 
         <?php
+        //valida acoes da pagina
         if ($acao == 'step1') {
             mostraForm1();
         }
@@ -324,11 +475,23 @@ function mostraForm5() { ?>
         if ($acao == 'step5') {
             mostraForm5();
         }
+        if ($acao == 'confirmaExcluir') {
+
+            $acao_post = isset($_POST['acao_post']) ? $_POST['acao_post'] : null;
+            $id = isset($_GET['id']) ? $_GET['id'] : null;
+
+            if ($acao_post != null) {
+                removeRegistro($id);
+                mostraForm1();
+            } else {
+                criaformExclusao($id);
+            }
+        }
         ?>
-<br>
-<?php
+        <br>
+        <?php
         mostraGrid();
-?>
+        ?>
 
     </body>
 </html>
