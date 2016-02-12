@@ -1,6 +1,11 @@
-<?php session_start(); // Inicia a sessão ?>
+<?php
 
-<?php include_once 'comum/topo.php'; ?>
+require_once 'controleSessao.php'; //include do banco
+sessao_valida();
+
+?>
+
+<?php require_once 'comum/topo.php'; ?>
         <div>Inventory Control</div>
         <ol type="1">
             <li><a href="cad_estoque.php">cadastro de Estoques</a></li>
@@ -12,4 +17,4 @@
 
         </ol>
 
-<?php include_once 'comum/base.php';
+<?php require_once 'comum/base.php';

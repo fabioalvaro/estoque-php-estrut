@@ -1,4 +1,9 @@
-<?php require_once 'comum/topo.php'; ?>
+<?php
+//Adiciona Controle de Sessao
+include_once 'controleSessao.php'; //include do banco
+sessao_valida();
+
+require_once 'comum/topo.php'; ?>
         <div>Central de Relatorios</div>
         <ol type="1">
               <li><a href="pre_lista_estoque.php">Lista Estoques</a></li>

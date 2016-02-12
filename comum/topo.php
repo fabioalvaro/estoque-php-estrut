@@ -7,4 +7,5 @@
     </head>
         <body>
             <div><h1><a href="home.php">Inventory Control</a></h1></div>
+            
             <hr>

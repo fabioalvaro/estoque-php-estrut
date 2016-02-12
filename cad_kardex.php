@@ -1,6 +1,7 @@
 <?php
-//inicia a sessao
-session_start();
+//Adiciona Controle de Sessao
+include_once 'controleSessao.php'; //include do banco
+sessao_valida();
 
 //Adiciona a referencia ao banco
 include_once 'banco/conexao.php'; //include do banco

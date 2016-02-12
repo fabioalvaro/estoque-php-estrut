@@ -1,6 +1,7 @@
 <?php
-//Inicia Sessao
-session_start();
+//Adiciona Controle de Sessao
+include_once 'controleSessao.php'; //include do banco
+sessao_valida();
 
 /**
  * Cadastro de Departamentos CRUD

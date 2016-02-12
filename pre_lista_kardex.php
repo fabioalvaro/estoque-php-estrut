@@ -1,3 +1,9 @@
+<?php 
+//Adiciona Controle de Sessao
+include_once 'controleSessao.php'; //include do banco
+sessao_valida();
+?>
+
 <!DOCTYPE html>
 <!--
 To change this license header, choose License Headers in Project Properties.
