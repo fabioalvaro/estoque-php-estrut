@@ -38,13 +38,10 @@ function removeRegistro($id) {
         
         saldo_atualiza($linha['produto_id'], $linha['estoque_id'], $saldoAtual_acerto);
     }
-    //die('remove die');
+    
 }
 
-function saldo_da_kardex($id) {
 
-    return 80;
-}
 
 function saldoExiste($produto, $estoque) {
     global $con;
@@ -52,10 +49,7 @@ function saldoExiste($produto, $estoque) {
             ' idestoque=' . $estoque . '';
     $qry = mysql_query($busca);
 
-//    if ($qry==false) 
-//        return false;
-//    else{
-//        return true;
+
     $linha = mysql_fetch_assoc($qry);
     if (sizeof($linha) > 1) {
         return 1;
@@ -64,8 +58,6 @@ function saldoExiste($produto, $estoque) {
     }
 
 
-    //var_dump($linha);
-    //return $linha;
 }
 
 /**
@@ -77,7 +69,7 @@ function saldoExiste($produto, $estoque) {
  */
 function navegacao($pagina = 1, $total = 0) {
     //maximo de registros por tela
-    $total_reg = 3;
+    $total_reg =20;
     //calcula quantas telas
     $maxpaginas = intval($total / $total_reg);
 
@@ -148,7 +140,7 @@ function criaformExclusao($id) {
  * @global type $con
  */
 function mostraGrid() {
-    $total_reg = "3"; // número de registros por página
+    $total_reg = "20"; // número de registros por página
 
 
     $pagina = $_SESSION['pagina'];
@@ -266,7 +258,7 @@ function mostraGrid() {
 
             //grava no Banco
             $dados['ativo'] = 1;
-            $dados['created'] = '2016-01-01 00:00:00';
+            $dados['created'] = date("Y-m-d h:i:s");
             $query = "INSERT INTO kardexs(created,tiposmovimento_id,clifor_id,"
                     . "produto_id,estoque_id,ativo,qtd,sinal)" .
                     " VALUES('" .
@@ -289,17 +281,17 @@ function mostraGrid() {
         function saldo_grava($produto_id, $estoque_id, $qtd,$sinal) {
 
             $existe = saldoExiste($produto_id, $estoque_id);
-            echo "existe? " . $existe;
+           
 
             if ($existe == false) {
 
-                echo "entao cria<br>";
+              
                 saldo_insere($produto_id, $estoque_id, $qtd);
             }
             if ($existe == true) {
 
-                echo "entao Atualiza<br>";
-                echo $saldoatual = saldoByEstoque($produto_id, $estoque_id);
+               
+                 $saldoatual = saldoByEstoque($produto_id, $estoque_id);
                 if ($sinal=='+'){
                   saldo_atualiza($produto_id, $estoque_id, $saldoatual + $qtd);  
                 }else{
@@ -329,10 +321,7 @@ function mostraGrid() {
                     ' idestoque=' . $estoque_id . '';
             $qry = mysql_query($busca);
 
-//    if ($qry==false) 
-//        return false;
-//    else{
-//        return true;
+
             $linha = mysql_fetch_assoc($qry);
             return $linha['qtd'];
         }
