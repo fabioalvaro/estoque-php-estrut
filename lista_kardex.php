@@ -1,9 +1,28 @@
+<?php
+
+    
+
+    // Adiciona a referencia ao banco
+    include_once 'banco/conexao.php'; 
+    
+var_dump($_POST);
+//recebe variaveis
+$dt1 = isset($_POST['dt1'])?$_POST['dt1']:null;
+$dt2 = isset($_POST['dt2'])?$_POST['dt2']:null;
+$pro1 = isset($_POST['pro1'])?$_POST['pro1']:null;
+$pro2 = isset($_POST['pro2'])?$_POST['pro2']:null;
+
+   $buscaKardex = 'select * from kardexs';
+  
+
+    $qry_kardex = mysql_query($buscaKardex);
+    $linha = mysql_fetch_assoc($qry_kardex);
+
+   
+    $titulo = "Periodo " . $dt1." entre ". $dt2. "Produto ".$dt1." até ".$pro2;   
+
+?>
 <!DOCTYPE html>
-<!--
-To change this license header, choose License Headers in Project Properties.
-To change this template file, choose Tools | Templates
-and open the template in the editor.
--->
 <html>
     <head>
         <title>Lista Kardex</title>
@@ -12,6 +31,7 @@ and open the template in the editor.
     </head>
     <body>
           <h1>Lista Kardex</h1>
+          <p><?php echo $titulo; ?> Data/Hora Impressão:<?php echo date("d/m/Y h:i:s"); ?></p>
         <table border="1">
             <thead>
                 <tr>
@@ -23,23 +43,18 @@ and open the template in the editor.
                     <th>saldo</th>
                 </tr>
             </thead>
-            <tbody>
+           <tbody>
+                <?php
+                do {
+                    $qtd = isset($linha['qtdtotal'])?$linha['qtdtotal']:"0";
+                    echo "
                 <tr>
-                    <td>1</td>
-                    <td>coca</td>
-                    <td>12/fev/2015</td>
-                    <td>Entrada +</td>
-                    <td>0</td>
-                    <td>50</td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>coca</td>
-                    <td>12/fev/2015</td>
-                    <td>Entrada +</td>
-                    <td>100</td>
-                    <td>150</td>
-                </tr>
+                <td>" . $linha['id'] . "</td>
+                <td>" . $linha['created'] . "</td>                 
+                <td>" . $qtd . "</td>
+                </tr>";
+                } while ($linha = mysql_fetch_assoc($qry_kardex));
+                ?>
             </tbody>
         </table>
 
